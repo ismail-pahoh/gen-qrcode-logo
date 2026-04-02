@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Samut Sakhon Juvenile and Family Court Create QR Code + Logo</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    canvas {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      background: white;
+    }
+    input, button {
+      margin: 5px;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>QR Code + Logo (SMSJC)</h2>
+
+<input type="text" id="qrText" placeholder="ระบุ URL หรือข้อความที่ต้องการแปลง" size="40"><br>
+
+<input type="file" id="logoInput" accept="image/png, image/jpeg"><br>
+
+<button onclick="generateQR()">สร้าง QR Code</button>
+<button onclick="downloadQR()">ดาวน์โหลด</button>
+
+<br>
+
+<canvas id="qrCanvas" width="500" height="500"></canvas>
+
+<script>
+let logoDataUrl = null;
+
+// 🔹 โลโก้ default (เปลี่ยนได้)
+const defaultLogo = "thumb_1pXCepTLkc.png";
+
+// โหลดไฟล์
+document.getElementById("logoInput").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.type.match("image/png") && !file.type.match("image/jpeg")) {
+    alert("รองรับเฉพาะ PNG หรือ JPG");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    logoDataUrl = event.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function generateQR() {
+  const text = document.getElementById("qrText").value;
+  const canvas = document.getElementById("qrCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const qrImage = new Image();
+  qrImage.crossOrigin = "anonymous";
+
+  qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(text)}`;
+
+  qrImage.onload = function () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(qrImage, 0, 0, 500, 500);
+
+    const logoSrc = logoDataUrl ? logoDataUrl : defaultLogo;
+
+    const logoImage = new Image();
+    logoImage.crossOrigin = "anonymous";
+    logoImage.src = logoSrc;
+
+    logoImage.onload = function () {
+      const logoSize = 100; // ขนาดโลโก้
+      const x = (canvas.width - logoSize) / 2;
+      const y = (canvas.height - logoSize) / 2;
+
+      // ✅ วาดพื้นหลังโค้งเนียน
+      drawRoundedRect(ctx, x - 12, y - 12, logoSize + 24, logoSize + 24, 20);
+
+      // เงานิดหน่อย (optional เพิ่มความสวย)
+      ctx.shadowColor = "rgba(0,0,0,0.2)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+
+      ctx.fillStyle = "white";
+      ctx.fill();
+
+      // reset shadow ก่อนวาดโลโก้
+      ctx.shadowColor = "transparent";
+
+      // วาดโลโก้
+      ctx.drawImage(logoImage, x, y, logoSize, logoSize);
+    };
+  };
+}
+
+// 🔹 ฟังก์ชันวาดสี่เหลี่ยมมุมโค้ง
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+// ดาวน์โหลด
+function downloadQR() {
+  const canvas = document.getElementById("qrCanvas");
+  const link = document.createElement("a");
+  link.download = "qrcode.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+</script>
+
+</body>
+</html>
