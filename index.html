@@ -123,7 +123,7 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
 function downloadQR() {
   const canvas = document.getElementById("qrCanvas");
   const link = document.createElement("a");
-  link.download = "qrcode.png";
+  link.download = "qrcode-smsjc.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
