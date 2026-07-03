@@ -38,7 +38,7 @@
 <script>
 let logoDataUrl = null;
 
-// 🔹 โลโก้ default (เปลี่ยนได้)
+// 🔹 โลโก้ default
 const defaultLogo = "https://raw.githubusercontent.com/ismail-pahoh/gen-qrcode-logo/refs/heads/main/1pXCepTLkc.png";
 
 // โหลดไฟล์
@@ -60,13 +60,19 @@ document.getElementById("logoInput").addEventListener("change", function(e) {
 
 function generateQR() {
   const text = document.getElementById("qrText").value;
+  if (!text.trim()) {
+    alert("กรุณากรอกข้อความหรือ URL");
+    return;
+  }
+  
   const canvas = document.getElementById("qrCanvas");
   const ctx = canvas.getContext("2d");
 
   const qrImage = new Image();
   qrImage.crossOrigin = "anonymous";
 
-  qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(text)}`;
+  // 🛠️ แก้ไข: เพิ่ม &ecc=H เพื่อเปิดโหมด High Error Correction (กู้คืนข้อมูลสูงสุด 30%)
+  qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&ecc=H&data=${encodeURIComponent(text)}`;
 
   qrImage.onload = function () {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -79,24 +85,21 @@ function generateQR() {
     logoImage.src = logoSrc;
 
     logoImage.onload = function () {
-      const logoSize = 100; // ขนาดโลโก้
+      const logoSize = 90; // 🛠️ ปรับลดขนาดลงเล็กน้อยเพื่อให้สแกนง่ายขึ้น (จากเดิม 100)
       const x = (canvas.width - logoSize) / 2;
       const y = (canvas.height - logoSize) / 2;
+      const padding = 12; // ระยะขอบขาวรอบโลโก้
 
-      // ✅ วาดพื้นหลังโค้งเนียน
-      drawRoundedRect(ctx, x - 12, y - 12, logoSize + 24, logoSize + 24, 20);
-
-      // เงานิดหน่อย (optional เพิ่มความสวย)
-      ctx.shadowColor = "rgba(0,0,0,0.2)";
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 2;
-
+      // 🛠️ วาดพื้นหลังสีขาวทึบเพื่อเคลียร์จุด QR Code ออกก่อน
+      ctx.save();
+      drawRoundedRect(ctx, x - padding, y - padding, logoSize + (padding * 2), logoSize + (padding * 2), 15);
       ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0,0,0,0.15)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 3;
       ctx.fill();
-
-      // reset shadow ก่อนวาดโลโก้
-      ctx.shadowColor = "transparent";
+      ctx.restore();
 
       // วาดโลโก้
       ctx.drawImage(logoImage, x, y, logoSize, logoSize);
@@ -104,7 +107,7 @@ function generateQR() {
   };
 }
 
-// 🔹 ฟังก์ชันวาดสี่เหลี่ยมมุมโค้ง
+// ฟังก์ชันวาดสี่เหลี่ยมมุมโค้ง
 function drawRoundedRect(ctx, x, y, width, height, radius) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
